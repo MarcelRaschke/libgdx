@@ -33,10 +33,6 @@ public class AndroidFragmentApplication extends Fragment implements AndroidAppli
 		void exit ();
 	}
 
-	static {
-		GdxNativesLoader.load();
-	}
-
 	protected AndroidGraphics graphics;
 	protected AndroidInput input;
 	protected AndroidAudio audio;
@@ -130,14 +126,15 @@ public class AndroidFragmentApplication extends Fragment implements AndroidAppli
 	 * @return the GLSurfaceView of the application */
 	public View initializeForView (ApplicationListener listener, AndroidApplicationConfiguration config) {
 		if (this.getVersion() < MINIMUM_SDK) {
-			throw new GdxRuntimeException("LibGDX requires Android API Level " + MINIMUM_SDK + " or later.");
+			throw new GdxRuntimeException("libGDX requires Android API Level " + MINIMUM_SDK + " or later.");
 		}
+		GdxNativesLoader.load();
 		setApplicationLogger(new AndroidApplicationLogger());
 		graphics = new AndroidGraphics(this, config, config.resolutionStrategy == null ? new FillResolutionStrategy()
 			: config.resolutionStrategy);
 		input = createInput(this, getActivity(), graphics.view, config);
 		audio = createAudio(getActivity(), config);
-		files = new AndroidFiles(getResources().getAssets(), getActivity());
+		files = createFiles();
 		net = new AndroidNet(this, config);
 		this.listener = listener;
 		this.handler = new Handler();
@@ -455,6 +452,10 @@ public class AndroidFragmentApplication extends Fragment implements AndroidAppli
 	@Override
 	public AndroidInput createInput (Application activity, Context context, Object view, AndroidApplicationConfiguration config) {
 		return new DefaultAndroidInput(this, getActivity(), graphics.view, config);
+	}
+
+	protected AndroidFiles createFiles() {
+		return new DefaultAndroidFiles(getResources().getAssets(), getActivity(), true);
 	}
 
 	@Override

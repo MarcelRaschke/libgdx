@@ -35,9 +35,6 @@ import com.badlogic.gdx.utils.*;
  * 
  * @author mzechner */
 public class AndroidLiveWallpaper implements AndroidApplicationBase {
-	static {
-		GdxNativesLoader.load();
-	}
 
 	protected AndroidLiveWallpaperService service;
 
@@ -62,8 +59,9 @@ public class AndroidLiveWallpaper implements AndroidApplicationBase {
 
 	public void initialize (ApplicationListener listener, AndroidApplicationConfiguration config) {
 		if (this.getVersion() < MINIMUM_SDK) {
-			throw new GdxRuntimeException("LibGDX requires Android API Level " + MINIMUM_SDK + " or later.");
+			throw new GdxRuntimeException("libGDX requires Android API Level " + MINIMUM_SDK + " or later.");
 		}
+		GdxNativesLoader.load();
 		setApplicationLogger(new AndroidApplicationLogger());
 		graphics = new AndroidGraphicsLiveWallpaper(this, config, config.resolutionStrategy == null ? new FillResolutionStrategy()
 			: config.resolutionStrategy);
@@ -74,10 +72,7 @@ public class AndroidLiveWallpaper implements AndroidApplicationBase {
 		// input = new AndroidInput(this, this.getService(), null, config);
 
 		audio = createAudio(this.getService(), config);
-
-		// added initialization of android local storage: /data/data/<app package>/files/
-		this.getService().getFilesDir(); // workaround for Android bug #10515463
-		files = new AndroidFiles(this.getService().getAssets(), this.getService());
+		files = createFiles();
 		net = new AndroidNet(this, config);
 		this.listener = listener;
 		clipboard = new AndroidClipboard(this.getService());
@@ -357,6 +352,12 @@ public class AndroidLiveWallpaper implements AndroidApplicationBase {
 	@Override
 	public AndroidInput createInput (Application activity, Context context, Object view, AndroidApplicationConfiguration config) {
 		return new DefaultAndroidInput(this, this.getService(), graphics.view, config);
+	}
+
+	protected AndroidFiles createFiles() {
+		// added initialization of android local storage: /data/data/<app package>/files/
+		this.getService().getFilesDir(); // workaround for Android bug #10515463
+		return new DefaultAndroidFiles(this.getService().getAssets(), this.getService(), true);
 	}
 
 	@Override
